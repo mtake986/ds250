@@ -1,3 +1,4 @@
+This file is the same as submit.md
 # Client Report - [What is in a name?]
 __Course CSE 250__
 Masahiro Takechi
