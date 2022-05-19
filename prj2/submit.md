@@ -138,146 +138,146 @@ The output is the chart below.
 ##### a. 30% of all delayed flights in the Late-Arriving category are due to weather.
 ##### b. From April to August, 40% of delayed flights in the NAS category are due to weather. The rest of the months, the proportion rises to 65%.
 
-I expected the names are still popular, but the result tells it's not true. 
-The name, Mary, stands out since 1920 to 1970.Other three names, Martha, Peter, Paul, had been gradually used from 1920 to around 1950. After 1950-ish, all four name have been not used much and the number of the names keep decreasing since 1950-ish. As for missing month which displays "n/a", I deleted all from the dataframe of flights because I didn't know which month those are exactly even if I could guess. 
+THe total number of flights delayed by severe or mild weather from 2005 to 2015 in the 7 airports is about 1,079,909.
 
 ##### TECHNICAL DETAILS
 
 ```python 
-# Query data by the four names
-chritianNames = names.query(
-  "name == ['Mary', 'Martha', 'Peter', 'Paul'] & year >= 1920 & year <= 2000"
-  )[["name", "year","Total"]]
-chritianNames
-```
-The output is the table below showing only the first and last three rows of 324 rows
-| id     | name   | year | Total  |
-|---------:|:-------------:|:----:|:------:|
-| 264124 | Martha | 1920 | 8705.0 |
-| 264125 | Martha | 1921 | 9254.0 |
-| 264126 | Martha | 1922 | 9018.0 |
-| ...    | ...    | ...  | ...    |
-| 303693 | Peter | 1998 | 3377.0 |
-| 303694 | Peter | 1999 | 3430.0 |
-| 303695 | Peter | 2000 | 3137.0 |
 
-```python
-all_chart = (alt.Chart(chritianNames)
-    .mark_line()
-    .encode(
-        x = alt.X("year", axis=alt.Axis(title="Year")),
-        y = alt.Y("Total", axis=alt.Axis(title="Total")),
-        color = alt.Color("name", scale=alt.Scale(scheme='category10'))
-    ).interactive()
+# First drop -999 which is an inappropriate value in a column, 'num_of_delays_late_aircraft'
+indexNames = flights[ flights['num_of_delays_late_aircraft'] == -999 ].index
+flights.drop(indexNames, inplace=True)
+
+# For a, 
+flights_new = (flights
+    .assign(
+        weather_late_aircraft = round(
+            flights.num_of_delays_late_aircraft * .3, 0))
+            [[
+                "num_of_delays_late_aircraft", 
+                "num_of_delays_nas", 
+                "num_of_delays_weather",  
+                "weather_late_aircraft"
+            ]]
 )
-all_chart
-# all_chart.save('charts/grand_q3_chart.png')
+
+# For b,
+for i in flights_new.month:
+  if i in ['April', 'May', 'June', 'July', 'August']:
+    flights_new = flights_new.assign(weather_delays_nas = round(flights.num_of_delays_nas * .4))
+  else:
+    flights_new = flights_new.assign(weather_delays_nas = round(flights.num_of_delays_nas * .65))
+
+TotalDelayedFlightsDueToWeather = (
+  flights_new.num_of_delays_weather.sum()
+  + flights_new.weather_late_aircraft.sum()
+  + flights_new.weather_delays_nas.sum()
+)
+TotalDelayedFlightsDueToWeather
+# TotalDelayedFlightsDueToWeather should contain 1079909.0
 ```
-The output is the chart below. 
-![](charts/grand_q3_chart.png)
 
 ### GRAND QUESTION 4
 #### Create a barplot showing the proportion of all flights that are delayed by weather at each airport. What do you learn from this graph (Careful to handle the missing Late Aircraft data correctly)?
-According to the chart below, the name, Anakin from the movie Star Wars, got the most number of usage in the year 2015. Interstingly, the number of the name, Anakin, increased a lot every when a new movie of Star Wars is released. In the chart, you can see that on 1999, 2005, and 2015, the number of the name, Anakin, is the highest among a few years around the years.
+
+Consideringt the chart, ORD in Chicago and SFO in San Francisco are the two airports with the highest proportion of delayed flights due to weather. ORD is in Chicago with snow in winter so the proportion of delayed flights due to weather is higher than other airports.
+More importantly, delay due to weather takes up to 30% to 40% of all delayed flights although there are 5 main reasons for delay: carrier, late aircraft, nas, weather, and security. 
 
 ##### TECHNICAL DETAILS
 
 ```python 
-anakin = names.query(
-  "name == 'Anakin'")[["name", "year","Total"]]
-anakin
-```
-The output is the table below showing only the first and last three rows of 324 rows
-| id    | name   | year | Total |
-|------:|:------:|:----:|:-----:|
-| 19325 | Anakin | 1998 | 5.0   |
-| 19326 | Anakin | 1999 | 61.0  |
-| 19327 | Anakin | 2000 | 44.0  |
-| ...   | ...    | ...  | ...   |
-| 19340 | Anakin | 2013 | 91.0  |
-| 19341 | Anakin | 2014 | 162.0 |
-| 19342 | Anakin | 2015 | 177.0 |
+# Drop error values
+indexNames = flights[ flights['num_of_delays_late_aircraft'] == -999 ].index
+flights.drop(indexNames, inplace=True)
 
-```python
-anakin_chart = (alt.Chart(anakin)
-    .mark_line()
-    .encode(
-        x = alt.X("year", axis=alt.Axis(title="Year")),
-        y = alt.Y("Total", axis=alt.Axis(title="Total"))
+# Create a new column to store aircraft delayed by weather
+flights_new = flights.assign(weather_late_aircraft = round(flights.num_of_delays_late_aircraft * .3, 0))[["airport_code", "month", "num_of_delays_late_aircraft", "num_of_delays_nas", "num_of_delays_weather", "num_of_delays_total", "weather_late_aircraft"]]
+
+# Iterate through each month in the dataframe
+for i in flights_new.month:
+  if i in ['April', 'May', 'June', 'July', 'August']:
+    flights_new = flights_new.assign(weather_delays_nas = round(flights.num_of_delays_nas * .4))
+  else:
+    flights_new = flights_new.assign(weather_delays_nas = round(flights.num_of_delays_nas * .65))
+
+# Organize the dataframe by airport_code
+eachAirport = flights_new.groupby('airport_code').sum()
+
+# Calculate the total of weather delays
+eachAirport = (eachAirport
+    .assign(
+        total_weather_delays = (
+            eachAirport.num_of_delays_weather
+            + eachAirport.weather_late_aircraft
+            + eachAirport.weather_delays_nas
+        )
     )
 )
 
-anakin_chart
-anakin_chart.save('charts/grand_q4_chart.png')
-
-```
-The output is the chart below. 
-![](charts/grand_q4_chart.png)
-
-#### Chart for Anakin and other 3 names in Star Wars
-I was just interested in how other names in Star Wars have been used.
-```python 
-sw = names.query(
-  "name == ['Anakin', 'Leia', 'Rey', 'Bodhi']")[["name", "year","Total"]]
-sw
+# Calculate the proportion of weather delays
+eachAirport = (eachAirport
+    .assign(
+        proportion_of_weather_delayed_flights = round(
+            eachAirport.total_weather_delays / eachAirport.num_of_delays_total * 100, 1
+        )
+    )
+).reset_index()
 ```
 
 ```python
-starWarsChart = (alt.Chart(sw)
-    .mark_line()
-    .encode(
-        x = alt.X("year", axis=alt.Axis(title="Year")),
-        y = alt.Y("Total", axis=alt.Axis(title="Total")),
-        color = alt.Color("name", scale=alt.Scale(scheme='category10'))
-    ).interactive()
+chart = (
+    alt.Chart(eachAirport)
+        .mark_bar()
+        .encode(
+            x="proportion_of_weather_delayed_flights:Q",
+            y="airport_code:N",
+            color=alt.condition(
+                alt.datum.proportion_of_weather_delayed_flights == eachAirport.proportion_of_weather_delayed_flights.max(),
+                alt.value('orange'), # true
+                alt.value('steelblue') # false
+            )
+        )
 )
-starWarsChart
-starWarsChart.save('charts/star_wars_names_chart.png')
+chart
 ```
-![](charts/star_wars_names_chart.png)
+The output is the chart below. 
+![](./imgs/q4.png)
 
 
 
-### GRAND QUESTION 3
+### GRAND QUESTION 5
 #### Fix all of the varied NA types in the data to be consistent and save the file back out in the same format that was provided (this file shouldn’t have the missing values replaced with a value). Include one record example from your exported JSON file that has a missing value (No imputation in this file).
 
-I expected the names are still popular, but the result tells it's not true. 
-The name, Mary, stands out since 1920 to 1970.Other three names, Martha, Peter, Paul, had been gradually used from 1920 to around 1950. After 1950-ish, all four name have been not used much and the number of the names keep decreasing since 1950-ish. 
+The two columns, num_of_delays_carrier and num_of_delays_late_aircraft, have now null which had error values. 
 
 ##### TECHNICAL DETAILS
 
-```python 
-# Query data by the four names
-chritianNames = names.query(
-  "name == ['Mary', 'Martha', 'Peter', 'Paul'] & year >= 1920 & year <= 2000"
-  )[["name", "year","Total"]]
-chritianNames
+``` python 
+# Replace all error values with NaN
+flights_new = flights.replace(["", -999, "n/a"], np.nan)
+flights_new.isnull().sum()
+flights_new.to_json("q5.json", orient="records")
 ```
-The output is the table below showing only the first and last three rows of 324 rows
-| id     | name   | year | Total  |
-|---------:|:-------------:|:----:|:------:|
-| 264124 | Martha | 1920 | 8705.0 |
-| 264125 | Martha | 1921 | 9254.0 |
-| 264126 | Martha | 1922 | 9018.0 |
-| ...    | ...    | ...  | ...    |
-| 303693 | Peter | 1998 | 3377.0 |
-| 303694 | Peter | 1999 | 3430.0 |
-| 303695 | Peter | 2000 | 3137.0 |
 
-```python
-all_chart = (alt.Chart(chritianNames)
-    .mark_line()
-    .encode(
-        x = alt.X("year", axis=alt.Axis(title="Year")),
-        y = alt.Y("Total", axis=alt.Axis(title="Total")),
-        color = alt.Color("name", scale=alt.Scale(scheme='category10'))
-    ).interactive()
-)
-all_chart
-# all_chart.save('charts/grand_q3_chart.png')
+```json
+{
+    "airport_code":"ATL",
+    "airport_name":"Atlanta, GA: Hartsfield-Jackson Atlanta International",
+    "month":"January",
+    "year":2005.0,
+    "num_of_flights_total":35048,
+    "num_of_delays_carrier":null,
+    "num_of_delays_late_aircraft":null,
+    "num_of_delays_nas":4598,
+    "num_of_delays_security":10,
+    "num_of_delays_weather":448,
+    "num_of_delays_total":8355,
+    "minutes_delayed_carrier":116423.0,
+    "minutes_delayed_late_aircraft":104415,
+    "minutes_delayed_nas":207467.0,
+    "minutes_delayed_security":297,
+    "minutes_delayed_weather":36931,
+    "minutes_delayed_total":465533
+}
+
 ```
-The output is the chart below. 
-![](charts/grand_q3_chart.png)
-
-
-
