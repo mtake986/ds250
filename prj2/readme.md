@@ -281,5 +281,3 @@ flights_new.to_json("q5.json", orient="records")
 }
 
 ```
-
-
