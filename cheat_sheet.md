@@ -104,7 +104,7 @@ flights_new = (flights
 ### chart: range 
 ```python
 alt.Chart(ttl).mark_point().encode(
-    x=alt.Y("year:Q", 
+    x=alt.X("year:Q", 
             scale=alt.Scale(
                 domain=[
                     flights.year.min() - 1, 
@@ -117,6 +117,12 @@ alt.Chart(ttl).mark_point().encode(
     ),
     shape='airport_code:N',
 ).interactive()
+```
+
+# Project 3
+## Import sql file
+```python
+con = sqlite3.connect('lahmansbaseballdb.sqlite')
 ```
 
 

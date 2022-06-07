@@ -111,3 +111,13 @@ q1 = pd.read_sql_query("""
 """, con)
 q1
 # %%
+# con = sqlite3.connect('lahmansbaseballdb.sqlite')
+
+df = pd.read_sql_query("""
+                       select * 
+                       from Batting
+                       limit 2"""
+                       , con)
+# %%
+df.shape
+# %%
