@@ -117,7 +117,17 @@ alt.Chart(ttl).mark_point().encode(
     ),
     shape='airport_code:N',
 ).interactive()
+
+alt.Chart(sub_dat).mark_boxplot().encode(
+  x = "gartype",
+  y=alt.Y("yrbuilt", 
+    scale=alt.Scale(
+      zero = False
+    )
+  ),
+)
 ```
+
 
 # Project 3
 ## Import sql file
