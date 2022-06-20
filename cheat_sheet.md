@@ -51,6 +51,9 @@ chart_num_of_flights_total = (
 ``` python
 chart_name.save("./imgs/whatever.png")
 ```
+#### How to display in md file
+###### ![](./was_atl_salary.png)
+
 
 ### Table data to markdown 
 ``` python
