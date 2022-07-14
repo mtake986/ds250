@@ -65,6 +65,7 @@ In my model, the 3 highest features are, from highest, "livearea", "arcstyle_ONE
 | gartype_Att        |    0.0888687 |
 | arcstyle_ONE-STORY |    0.11373   |
 | livearea           |    0.142107  |
+<!-- After submission, my teacher said that only this table itself doesn't mean anything, so I needed to create a visualization graph to see easily which features have greater values -->
 ##### TECHNICAL DETAILS
 
 ```python 
